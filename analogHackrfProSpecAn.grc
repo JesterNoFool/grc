@@ -161,7 +161,7 @@ blocks:
     gui_hint: 1,0,1,10
     label: 'Resolution bandwidth (Hz): '
     type: real
-    value: 40e3
+    value: 80e3
   states:
     bus_sink: false
     bus_source: false
