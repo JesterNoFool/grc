@@ -37,7 +37,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: 2**9
+    value: 2**fftLength
   states:
     bus_sink: false
     bus_source: false
@@ -59,6 +59,19 @@ blocks:
     coordinate: [1112, 156.0]
     rotation: 0
     state: enabled
+- name: fftLength
+  id: variable
+  parameters:
+    comment: "Calculate an exponent\nto set the FFT display\nso that is is close to\
+      \ the \nvalue of the RBW"
+    value: np.round(np.log(2.004*samp_rate/rbw)/np.log(2))
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1336, 404.0]
+    rotation: 0
+    state: true
 - name: fft_rbw
   id: variable_qtgui_label
   parameters:
@@ -148,7 +161,7 @@ blocks:
     gui_hint: 1,0,1,10
     label: 'Resolution bandwidth (Hz): '
     type: real
-    value: 20e3
+    value: 40e3
   states:
     bus_sink: false
     bus_source: false
@@ -161,7 +174,7 @@ blocks:
   parameters:
     comment: 'Create the resolution bandwidth filter
 
-      Value: firdes.low_pass(1,samp_rate,rbw/2,rbw/8,0)'
+      Value: firdes.low_pass(1,samp_rate,rbw/2,rbw/2,0)'
     value: firdes.low_pass(1,samp_rate,rbw/2,rbw/2,0)
   states:
     bus_sink: false
@@ -383,7 +396,7 @@ blocks:
   parameters:
     affinity: ''
     alias: ''
-    comment: ''
+    comment: Peak gain correction
     const: '2.7902'
     maxoutbuf: '0'
     minoutbuf: '0'
@@ -649,7 +662,7 @@ blocks:
     comment: 'Update Period: swpTime'
     ctrlpanel: 'False'
     fc: cf*1e6
-    fftsize: '4096'
+    fftsize: int(N)
     freqhalf: 'True'
     grid: 'True'
     gui_hint: 23,0,20,20
