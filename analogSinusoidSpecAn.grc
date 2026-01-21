@@ -120,7 +120,7 @@ blocks:
     gui_hint: 1,0,1,10
     label: 'Resolution bandwidth (Hz): '
     type: real
-    value: 300e3
+    value: 3e3
   states:
     bus_sink: false
     bus_source: false
@@ -133,7 +133,7 @@ blocks:
   parameters:
     comment: 'Create the resolution bandwidth filter
 
-      Value: firdes.low_pass(1,samp_rate,rbw/2,rbw/8,0)'
+      Value: firdes.low_pass(1,samp_rate,rbw/2,rbw/2,0)'
     value: firdes.low_pass(1,samp_rate,rbw/2,rbw/2,0)
   states:
     bus_sink: false
