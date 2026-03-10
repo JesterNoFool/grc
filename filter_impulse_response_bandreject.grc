@@ -1,0 +1,1232 @@
+options:
+  parameters:
+    author: Gary Schafer
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: qt_gui
+    hier_block_src_path: '.:'
+    id: filter_impulse_response_bandreject
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: Bandreject using Spectral Inversion
+    window_size: (1000,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [56, 16.0]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: M
+  id: variable
+  parameters:
+    comment: 'Used to create symmetric
+
+      counter around 0.
+
+      ----------------------------------
+
+      Value: int((filt_length-1)/2)'
+    value: int((filt_length-1)/2)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [576, 48.0]
+    rotation: 0
+    state: enabled
+- name: N
+  id: variable
+  parameters:
+    comment: ''
+    value: 2**14
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [224, 128.0]
+    rotation: 0
+    state: enabled
+- name: all_pass
+  id: variable
+  parameters:
+    comment: All-pass impulse response
+    value: '[0,]*M+[1,]+[0,]*M'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 56.0]
+    rotation: 0
+    state: enabled
+- name: bpf_sinc
+  id: variable
+  parameters:
+    comment: 'Create the bandpass sinc curve
+
+      by subtracting low frequency
+
+      sinc curve from the high
+
+      frequency sinc curve.'
+    value: np.subtract(sinc_high,sinc_low)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1080, 184.0]
+    rotation: 0
+    state: enabled
+- name: bpf_win
+  id: variable
+  parameters:
+    comment: 'Window the bandpass
+
+      filter for comparison
+
+      purposes with the band
+
+      reject filter.'
+    value: np.multiply(bpf_sinc,w)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1264, 184.0]
+    rotation: 0
+    state: enabled
+- name: brf
+  id: variable
+  parameters:
+    comment: 'Create the final band
+
+      reject filter by normalizing
+
+      the gain of the windowed BRF.'
+    value: brf_win/gain
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1072, 544.0]
+    rotation: 0
+    state: enabled
+- name: brf_sinc
+  id: variable
+  parameters:
+    comment: 'Transform bandpass sinc
+
+      curve into band reject sinc
+
+      curve by subtracting
+
+      prototype bandpass
+
+      filter impulse response
+
+      from all-pass impulse response.'
+    value: np.subtract(all_pass,bpf_sinc)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1080, 344.0]
+    rotation: 0
+    state: enabled
+- name: brf_win
+  id: variable
+  parameters:
+    comment: 'Window the band reject
+
+      sinc curve.'
+    value: np.multiply(brf_sinc,w)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1264, 344.0]
+    rotation: 0
+    state: enabled
+- name: cutoff_high
+  id: variable
+  parameters:
+    comment: 'High frequency
+
+      limit'
+    value: 200e3
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [752, 184.0]
+    rotation: 0
+    state: enabled
+- name: cutoff_low
+  id: variable
+  parameters:
+    comment: 'Low frequency
+
+      limit'
+    value: 100e3
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [752, 56.0]
+    rotation: 0
+    state: enabled
+- name: filt_length
+  id: variable
+  parameters:
+    comment: "Number of taps to\nuse creating the filter.\nThis corresponds to\na\
+      \ harris approximation\ncalculation using a \ntransition width of\n20 kHz with\
+      \ a 2.4 MHz\nsample rate and Hamming\nwindow."
+    value: '289'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [416, 48.0]
+    rotation: 0
+    state: enabled
+- name: gain
+  id: variable
+  parameters:
+    comment: 'Calculate the gain
+
+      of the windowed
+
+      band reject filter.'
+    value: np.sum(brf_win)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 544.0]
+    rotation: 0
+    state: enabled
+- name: grc_brf
+  id: variable_band_reject_filter_taps
+  parameters:
+    beta: '6.76'
+    comment: 'Gnu Radio Companion
+
+      band reject filter
+
+      for comparison.'
+    gain: '1.0'
+    high_cutoff_freq: 200e3
+    low_cutoff_freq: 100e3
+    samp_rate: samp_rate
+    type: band_reject
+    value: ''
+    width: 20e3
+    win: window.WIN_HAMMING
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [64, 300.0]
+    rotation: 0
+    state: enabled
+- name: n
+  id: variable
+  parameters:
+    comment: 'Counter used to
+
+      create sinc curves'
+    value: np.arange(-M,M+1,1)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [576, 208.0]
+    rotation: 0
+    state: enabled
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: 2.4e6
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [232, 48.0]
+    rotation: 0
+    state: enabled
+- name: sinc_high
+  id: variable
+  parameters:
+    comment: 'High frequency sinc curve
+
+      impulse response'
+    value: 2*cutoff_high*np.sinc(2*n*cutoff_high/samp_rate)/samp_rate
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 344.0]
+    rotation: 0
+    state: enabled
+- name: sinc_low
+  id: variable
+  parameters:
+    comment: 'Low frequency sinc curve
+
+      impulse response'
+    value: 2*cutoff_low*np.sinc(2*n*cutoff_low/samp_rate)/samp_rate
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 184.0]
+    rotation: 0
+    state: enabled
+- name: w
+  id: variable
+  parameters:
+    comment: Window curve
+    value: window.hamming(filt_length)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1072, 56.0]
+    rotation: 0
+    state: enabled
+- name: blocks_complex_to_mag_0
+  id: blocks_complex_to_mag
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: N
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 736.0]
+    rotation: 0
+    state: enabled
+- name: blocks_complex_to_mag_0_0
+  id: blocks_complex_to_mag
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: N
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 872.0]
+    rotation: 0
+    state: enabled
+- name: blocks_complex_to_mag_0_0_0
+  id: blocks_complex_to_mag
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: N
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 1024.0]
+    rotation: 0
+    state: enabled
+- name: blocks_complex_to_mag_0_0_0_0
+  id: blocks_complex_to_mag
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: N
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 1168.0]
+    rotation: 0
+    state: enabled
+- name: blocks_stream_to_vector_0
+  id: blocks_stream_to_vector
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_items: N
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [448, 744.0]
+    rotation: 0
+    state: enabled
+- name: blocks_stream_to_vector_0_0
+  id: blocks_stream_to_vector
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_items: N
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [448, 880.0]
+    rotation: 0
+    state: enabled
+- name: blocks_stream_to_vector_0_0_0
+  id: blocks_stream_to_vector
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_items: N
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [448, 1032.0]
+    rotation: 0
+    state: enabled
+- name: blocks_stream_to_vector_0_0_0_0
+  id: blocks_stream_to_vector
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_items: N
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [448, 1176.0]
+    rotation: 0
+    state: enabled
+- name: blocks_throttle_0
+  id: blocks_throttle
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [704, 1536.0]
+    rotation: 0
+    state: enabled
+- name: blocks_vector_source_x_0
+  id: blocks_vector_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Impulse generator
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    repeat: 'True'
+    tags: '[]'
+    type: float
+    vector: '[0,]*int(N/2-1)+[N,]+[0,]*int(N/2)'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [488, 1520.0]
+    rotation: 0
+    state: enabled
+- name: blocks_vector_source_x_0_0
+  id: blocks_vector_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: 'Prototype BRF
+
+      impulse response'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    repeat: 'True'
+    tags: '[]'
+    type: float
+    vector: brf_sinc
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [56, 1592.0]
+    rotation: 0
+    state: enabled
+- name: blocks_vector_source_x_0_0_0
+  id: blocks_vector_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: 'Final BRF
+
+      impulse response'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    repeat: 'True'
+    tags: '[]'
+    type: float
+    vector: brf
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [56, 1736.0]
+    rotation: 0
+    state: enabled
+- name: blocks_vector_source_x_0_0_0_0
+  id: blocks_vector_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: 'Prototype BPF
+
+      impulse response'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    repeat: 'True'
+    tags: '[]'
+    type: float
+    vector: bpf_sinc
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [56, 1456.0]
+    rotation: 0
+    state: enabled
+- name: blocks_vector_source_x_0_0_1
+  id: blocks_vector_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: All-pass impulse response
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    repeat: 'True'
+    tags: '[]'
+    type: float
+    vector: all_pass
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [56, 1328.0]
+    rotation: 0
+    state: enabled
+- name: blocks_vector_source_x_0_1
+  id: blocks_vector_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Impulse generator
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    repeat: 'True'
+    tags: '[]'
+    type: float
+    vector: '[0,]*int(N/2-1)+[N,]+[0,]*int(N/2)'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [32, 936.0]
+    rotation: 0
+    state: enabled
+- name: fft_filter_xxx_0_0
+  id: fft_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    samp_delay: '0'
+    taps: brf
+    type: fff
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 1520.0]
+    rotation: 0
+    state: enabled
+- name: fft_filter_xxx_0_0_0
+  id: fft_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    samp_delay: '0'
+    taps: grc_brf
+    type: fff
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 1624.0]
+    rotation: 0
+    state: enabled
+- name: fft_filter_xxx_0_0_0_0
+  id: fft_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    samp_delay: '0'
+    taps: bpf_sinc
+    type: fff
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [280, 856.0]
+    rotation: 0
+    state: enabled
+- name: fft_filter_xxx_0_0_0_0_0
+  id: fft_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    samp_delay: '0'
+    taps: brf_sinc
+    type: fff
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [280, 1008.0]
+    rotation: 0
+    state: enabled
+- name: fft_filter_xxx_0_0_0_0_0_0
+  id: fft_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    samp_delay: '0'
+    taps: brf
+    type: fff
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [280, 1152.0]
+    rotation: 0
+    state: enabled
+- name: fft_filter_xxx_0_0_1
+  id: fft_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    samp_delay: '0'
+    taps: bpf_win
+    type: fff
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 1416.0]
+    rotation: 0
+    state: enabled
+- name: fft_filter_xxx_0_0_1_0
+  id: fft_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    samp_delay: '0'
+    taps: all_pass
+    type: fff
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [280, 720.0]
+    rotation: 0
+    state: enabled
+- name: fft_vxx_0
+  id: fft_vxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    fft_size: N
+    forward: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    shift: 'True'
+    type: float
+    window: '[1/N,]*N'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [640, 704.0]
+    rotation: 0
+    state: enabled
+- name: fft_vxx_0_0
+  id: fft_vxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    fft_size: N
+    forward: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    shift: 'True'
+    type: float
+    window: '[1/N,]*N'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [640, 840.0]
+    rotation: 0
+    state: enabled
+- name: fft_vxx_0_0_0
+  id: fft_vxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    fft_size: N
+    forward: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    shift: 'True'
+    type: float
+    window: '[1/N,]*N'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [640, 992.0]
+    rotation: 0
+    state: enabled
+- name: fft_vxx_0_0_0_0
+  id: fft_vxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    fft_size: N
+    forward: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    shift: 'True'
+    type: float
+    window: '[1/N,]*N'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [640, 1136.0]
+    rotation: 0
+    state: enabled
+- name: import_0
+  id: import
+  parameters:
+    alias: ''
+    comment: ''
+    imports: import numpy as np
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [328, 64.0]
+    rotation: 0
+    state: enabled
+- name: myTabs
+  id: qtgui_tab_widget
+  parameters:
+    alias: ''
+    comment: ''
+    gui_hint: 0,0,20,20
+    label0: Linear Frequency Response
+    label1: Impulse Response
+    label10: Tab 10
+    label11: Tab 11
+    label12: Tab 12
+    label13: Tab 13
+    label14: Tab 14
+    label15: Tab 15
+    label16: Tab 16
+    label17: Tab 17
+    label18: Tab 18
+    label19: Tab 19
+    label2: Log Frequency Response
+    label3: Tab 3
+    label4: Tab 4
+    label5: Tab 5
+    label6: Tab 6
+    label7: Tab 7
+    label8: Tab 8
+    label9: Tab 9
+    num_tabs: '3'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [56, 128.0]
+    rotation: 0
+    state: enabled
+- name: note_0
+  id: note
+  parameters:
+    alias: ''
+    comment: ''
+    note: Linear Spectra
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [648, 632.0]
+    rotation: 0
+    state: enabled
+- name: note_1
+  id: note
+  parameters:
+    alias: ''
+    comment: ''
+    note: Impulse Response
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [288, 1376.0]
+    rotation: 0
+    state: enabled
+- name: note_2
+  id: note
+  parameters:
+    alias: ''
+    comment: ''
+    note: Log Frequency Response
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [608, 1376.0]
+    rotation: 0
+    state: enabled
+- name: note_3
+  id: note
+  parameters:
+    alias: ''
+    comment: 'The process to create a band reject
+
+      filter is to first create a bandpass
+
+      filter using the desired low and high
+
+      frequency limits. Then the bandpass
+
+      is transformed into a band reject
+
+      filter using spectral inversion.
+
+      1) Create a bandpass sinc curve
+
+      using one of the 3 defined methods.
+
+      2) Subtract the bandpass impulse
+
+      response from the all-pass impulse
+
+      response to create the band reject
+
+      filter.
+
+      3) Window and normalize the gain
+
+      of the final band reject filter.'
+    note: Creating BRF
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [296, 304.0]
+    rotation: 0
+    state: enabled
+- name: qtgui_freq_sink_x_0
+  id: qtgui_freq_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    average: '1.0'
+    axislabels: 'True'
+    bw: samp_rate
+    color1: '"black"'
+    color10: '"dark blue"'
+    color2: '"red"'
+    color3: '"green"'
+    color4: '"black"'
+    color5: '"cyan"'
+    color6: '"magenta"'
+    color7: '"yellow"'
+    color8: '"dark red"'
+    color9: '"dark green"'
+    comment: ''
+    ctrlpanel: 'False'
+    fc: '0'
+    fftsize: N
+    freqhalf: 'False'
+    grid: 'True'
+    gui_hint: myTabs@2
+    label: Relative Gain
+    label1: BPF
+    label10: ''''''
+    label2: Homemade BRF
+    label3: GRC BRF
+    label4: ''''''
+    label5: ''''''
+    label6: ''''''
+    label7: ''''''
+    label8: ''''''
+    label9: ''''''
+    legend: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    name: Frequency Response
+    nconnections: '3'
+    norm_window: 'False'
+    showports: 'False'
+    tr_chan: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_tag: '""'
+    type: float
+    units: dB
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    wintype: window.WIN_BLACKMAN_hARRIS
+    ymax: '10'
+    ymin: '-100'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1112, 1512.0]
+    rotation: 0
+    state: enabled
+- name: qtgui_time_sink_x_1
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: blue
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: ''
+    ctrlpanel: 'False'
+    entags: 'True'
+    grid: 'False'
+    gui_hint: myTabs@1
+    label1: All Pass
+    label10: Signal 10
+    label2: BPF Sinc
+    label3: BRF Sinc
+    label4: Final BRF
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'True'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: '""'
+    nconnections: '4'
+    size: filt_length
+    srate: samp_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: float
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '1'
+    ymin: '-1'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [288, 1496.0]
+    rotation: 0
+    state: enabled
+- name: qtgui_vector_sink_f_0
+  id: qtgui_vector_sink_f
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    average: '1.0'
+    color1: '"blue"'
+    color10: '"dark blue"'
+    color2: '"red"'
+    color3: '"green"'
+    color4: '"black"'
+    color5: '"cyan"'
+    color6: '"magenta"'
+    color7: '"yellow"'
+    color8: '"dark red"'
+    color9: '"dark green"'
+    comment: ''
+    grid: 'False'
+    gui_hint: myTabs@0
+    label1: All Pass
+    label10: ''
+    label2: BPF Sinc
+    label3: BRF Sinc
+    label4: Final BRF
+    label5: ''
+    label6: ''
+    label7: ''
+    label8: ''
+    label9: ''
+    legend: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    name: '"Double-Sided Linear Frequency Response"'
+    nconnections: '4'
+    ref_level: '0'
+    showports: 'False'
+    update_time: '0.10'
+    vlen: N
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    x_axis_label: '"Frequency (MHz)"'
+    x_start: -samp_rate/2e6
+    x_step: samp_rate/1e6/N
+    x_units: '"MHz"'
+    y_axis_label: '"Amplitude"'
+    y_units: '""'
+    ymax: '1.2'
+    ymin: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1144, 892.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [blocks_complex_to_mag_0, '0', qtgui_vector_sink_f_0, '0']
+- [blocks_complex_to_mag_0_0, '0', qtgui_vector_sink_f_0, '1']
+- [blocks_complex_to_mag_0_0_0, '0', qtgui_vector_sink_f_0, '2']
+- [blocks_complex_to_mag_0_0_0_0, '0', qtgui_vector_sink_f_0, '3']
+- [blocks_stream_to_vector_0, '0', fft_vxx_0, '0']
+- [blocks_stream_to_vector_0_0, '0', fft_vxx_0_0, '0']
+- [blocks_stream_to_vector_0_0_0, '0', fft_vxx_0_0_0, '0']
+- [blocks_stream_to_vector_0_0_0_0, '0', fft_vxx_0_0_0_0, '0']
+- [blocks_throttle_0, '0', fft_filter_xxx_0_0, '0']
+- [blocks_throttle_0, '0', fft_filter_xxx_0_0_0, '0']
+- [blocks_throttle_0, '0', fft_filter_xxx_0_0_1, '0']
+- [blocks_vector_source_x_0, '0', blocks_throttle_0, '0']
+- [blocks_vector_source_x_0_0, '0', qtgui_time_sink_x_1, '2']
+- [blocks_vector_source_x_0_0_0, '0', qtgui_time_sink_x_1, '3']
+- [blocks_vector_source_x_0_0_0_0, '0', qtgui_time_sink_x_1, '1']
+- [blocks_vector_source_x_0_0_1, '0', qtgui_time_sink_x_1, '0']
+- [blocks_vector_source_x_0_1, '0', fft_filter_xxx_0_0_0_0, '0']
+- [blocks_vector_source_x_0_1, '0', fft_filter_xxx_0_0_0_0_0, '0']
+- [blocks_vector_source_x_0_1, '0', fft_filter_xxx_0_0_0_0_0_0, '0']
+- [blocks_vector_source_x_0_1, '0', fft_filter_xxx_0_0_1_0, '0']
+- [fft_filter_xxx_0_0, '0', qtgui_freq_sink_x_0, '1']
+- [fft_filter_xxx_0_0_0, '0', qtgui_freq_sink_x_0, '2']
+- [fft_filter_xxx_0_0_0_0, '0', blocks_stream_to_vector_0_0, '0']
+- [fft_filter_xxx_0_0_0_0_0, '0', blocks_stream_to_vector_0_0_0, '0']
+- [fft_filter_xxx_0_0_0_0_0_0, '0', blocks_stream_to_vector_0_0_0_0, '0']
+- [fft_filter_xxx_0_0_1, '0', qtgui_freq_sink_x_0, '0']
+- [fft_filter_xxx_0_0_1_0, '0', blocks_stream_to_vector_0, '0']
+- [fft_vxx_0, '0', blocks_complex_to_mag_0, '0']
+- [fft_vxx_0_0, '0', blocks_complex_to_mag_0_0, '0']
+- [fft_vxx_0_0_0, '0', blocks_complex_to_mag_0_0_0, '0']
+- [fft_vxx_0_0_0_0, '0', blocks_complex_to_mag_0_0_0_0, '0']
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.9.2
